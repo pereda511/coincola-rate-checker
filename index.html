@@ -4,14 +4,119 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoinCola P2P Rates</title>
-    <!-- React & Babel CDN Libraries -->
+    <!-- React & Babel Core Libraries -->
     <script src="https://unpkg.com" crossorigin></script>
     <script src="https://unpkg.com" crossorigin></script>
     <script src="https://unpkg.com"></script>
 </head>
-<body>
+<body style="margin: 0; background-color: #f4f4f7;">
     <div id="root"></div>
-    <!-- Added type="text/babel" so the browser understands React JSX code -->
-    <script type="text/babel" src="/index.js"></script>
+
+    <script type="text/babel">
+        function App() {
+          const [rates, setRates] = React.useState({ btc: 0, usdt: 0 });
+          const [loading, setLoading] = React.useState(true);
+          const [tradeType, setTradeType] = React.useState('BUY');
+
+          // Your Business configurations
+          const BUSINESS_NAME = "Apex Exchange"; 
+          const WHATSAPP_NUMBER = "2348100812113"; 
+
+          const fetchRates = async () => {
+            try {
+              setLoading(true);
+              const res = await fetch(`/api/get-rates?type=${tradeType}`);
+              const data = await res.json();
+              if (data.success) {
+                setRates({ btc: data.btc, usdt: data.usdt });
+              }
+            } catch (err) {
+              console.error(err);
+            } finally {
+              setLoading(false);
+            }
+          };
+
+          React.useEffect(() => {
+            fetchRates();
+            const interval = setInterval(fetchRates, 30000);
+            return () => clearInterval(interval);
+          }, [tradeType]);
+
+          const getWhatsAppLink = (cryptoName, rate) => {
+            const formattedRate = rate.toLocaleString(undefined, { minimumFractionDigits: 2 });
+            const action = tradeType === 'BUY' ? 'sell to' : 'buy from';
+            const message = `Hello ${BUSINESS_NAME}, I want to ${action} you some ${cryptoName}. I am viewing your live rate of ₦${formattedRate} per ${cryptoName} on your website.`;
+            return `https://wa.me{WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+          };
+
+          const buttonStyle = {
+            display: 'block',
+            textAlign: 'center',
+            padding: '0.75rem',
+            marginTop: '1rem',
+            background: '#25D366',
+            color: '#fff',
+            textDecoration: 'none',
+            fontWeight: 'bold',
+            borderRadius: '8px',
+            boxShadow: '0 4px 10px rgba(37, 211, 102, 0.2)'
+          };
+
+          return (
+            <div style={{ padding: '2rem', fontFamily: 'system-ui, sans-serif', maxWidth: '450px', margin: '3rem auto', backgroundColor: '#ffffff', borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}>
+              
+              <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <h1 style={{ margin: '0 0 0.25rem 0', color: '#0070f3', fontSize: '1.75rem', fontWeight: '800' }}>
+                  {BUSINESS_NAME}
+                </h1>
+                <p style={{ margin: '0', color: '#666', fontSize: '0.9rem', fontWeight: '500' }}>
+                  Live CoinCola P2P Rates (NGN)
+                </p>
+              </div>
+              
+              <div style={{ display: 'flex', background: '#f0f0f2', padding: '4px', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <button onClick={() => setTradeType('BUY')} style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', background: tradeType === 'BUY' ? '#22c55e' : 'transparent', color: tradeType === 'BUY' ? '#fff' : '#555' }}>🟢 Buy Rates</button>
+                <button onClick={() => setTradeType('SELL')} style={{ flex: 1, padding: '0.6rem', border: 'none', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', background: tradeType === 'SELL' ? '#ef4444' : 'transparent', color: tradeType === 'SELL' ? '#fff' : '#555' }}>🔴 Sell Rates</button>
+              </div>
+
+              {loading ? <p style={{ textAlign: 'center', color: '#666' }}>Fetching real-time market updates...</p> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  
+                  <div style={{ padding: '1.25rem', border: '1px solid #e4e4e7', borderRadius: '12px', background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.9rem' }}>
+                      <strong>Tether (USDT)</strong>
+                      <span style={{ color: tradeType === 'BUY' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>{tradeType}</span>
+                    </div>
+                    <div style={{ fontSize: '1.9rem', fontWeight: '800', marginTop: '0.5rem' }}>
+                      ₦{rates.usdt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </div>
+                    <a href={getWhatsAppLink('USDT', rates.usdt)} target="_blank" rel="noopener noreferrer" style={buttonStyle}>
+                      💬 Trade USDT on WhatsApp
+                    </a>
+                  </div>
+
+                  <div style={{ padding: '1.25rem', border: '1px solid #e4e4e7', borderRadius: '12px', background: '#fafafa' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', color: '#666', fontSize: '0.9rem' }}>
+                      <strong>Bitcoin (BTC)</strong>
+                      <span style={{ color: tradeType === 'BUY' ? '#22c55e' : '#ef4444', fontWeight: 'bold' }}>{tradeType}</span>
+                    </div>
+                    <div style={{ fontSize: '1.9rem', fontWeight: '800', marginTop: '0.5rem' }}>
+                      ₦{rates.btc.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                    </div>
+                    <a href={getWhatsAppLink('BTC', rates.btc)} target="_blank" rel="noopener noreferrer" style={buttonStyle}>
+                      💬 Trade BTC on WhatsApp
+                    </a>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const root = tragedies = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
 </body>
 </html>
